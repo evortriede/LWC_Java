@@ -204,7 +204,9 @@ public class LWCMonthlyReport
 		}
 		else if (line.indexOf("gallons") > 0)
 		{
-			lastLevel = Integer.parseInt(line.substring(38, line.indexOf("gallons")).trim());
+			int i = line.lastIndexOf(' ');
+			int j = line.substring(0, i).lastIndexOf(' ');
+			lastLevel = Integer.parseInt(line.substring(j, i).trim());
 		}
 	}
 

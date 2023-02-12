@@ -52,7 +52,7 @@ public class VolTurbProcessor
   			if (fOn)
   			{
   				hm.put(getTsTextFromLine(line),line.substring(0, 36) + " start");
-  				System.out.println(getCorrectedLine(line," start"));
+  				System.err.println(getCorrectedLine(line," start"));
   			}
   		}
   		if (line.contains("gall"))
@@ -66,7 +66,7 @@ public class VolTurbProcessor
   			{
   				fOn=true;
   				hm.put(getTsTextFromLine(line),line.substring(0, 36) + "start");
-  				System.out.println(getCorrectedLine(line," start"));
+  				System.err.println(getCorrectedLine(line," start"));
   			}
   			else if (fOn)
   			{
@@ -76,7 +76,7 @@ public class VolTurbProcessor
   				{
 	  				fOn=false;
 	  				hm.put(getTsTextFromLine(line),line.substring(0, 36) + " stop");
-	  				System.out.println(getCorrectedLine(line," stop"));
+	  				System.err.println(getCorrectedLine(line," stop"));
   				}
   			}
   			avg=newAvg;
@@ -87,10 +87,13 @@ public class VolTurbProcessor
   
   int lastGallons=0;
   
+  // Tue 01/17/23 17:45:59  1674006359022 12 9411 gallons
+  //                                        j    i
   private int getGallFromLine(String line) throws Exception
 	{
 		int i = new String(line).lastIndexOf(' ');
-		int gallons = Integer.parseInt(line.substring(38,i).trim());
+		int j = line.substring(0, i).lastIndexOf(' ');
+		int gallons = Integer.parseInt(line.substring(j,i).trim());
 		if (gallons > 24000) // get rid of spurious values
 		{
 			gallons=lastGallons;
