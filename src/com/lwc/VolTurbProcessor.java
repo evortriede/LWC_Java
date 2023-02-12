@@ -33,9 +33,14 @@ public class VolTurbProcessor
 */
   }
   
+  public static final long aDayInMsec=(24*60*60*1000);
+  
   void getStartAndEndTimes() throws Exception
   {
-  	int[] sample=new int[8];
+  	long lastTurb=0;
+  	long lastStop=0;
+  	long lastStart=0;
+  	int[] sample=new int[16];
   	int iSample=0;
   	int avg=0;
   	int total=0;
@@ -57,30 +62,41 @@ public class VolTurbProcessor
   		}
   		if (line.contains("gall"))
   		{
+  			long lineTime=Long.parseLong(getTsTextFromLine(line));
+  			if (!fOn && (lineTime-lastTurb)>180000)
+  			{
+  				lastTurb=0;
+  			}
   			int value=getGallFromLine(line);
   			total=total - sample[iSample] + value;
   			sample[iSample]=value;
-  			iSample = (iSample+1)%8;
-  			int newAvg=total/8;
-  			if (!fOn && (newAvg-avg)>=0 && value<10000) // transition from off to on
+  			iSample = (iSample+1)%16;
+  			int newAvg=total/16;
+  			int delta=newAvg-avg;
+  			if (fOn)
   			{
-  				fOn=true;
-  				hm.put(getTsTextFromLine(line),line.substring(0, 36) + "start");
-  				System.err.println(getCorrectedLine(line," start"));
-  			}
-  			else if (fOn)
-  			{
-//  				String x=getTsTextFromLine(line)+" "+value+" "+avg+" "+newAvg+" "+(newAvg-avg);
-//  				System.out.println(x);
-  				if ((newAvg-avg)<0 && value>18000) // transition from on to off
+  				if (delta<0 && (lineTime-lastTurb)>120000) // transition from on to off
   				{
 	  				fOn=false;
 	  				hm.put(getTsTextFromLine(line),line.substring(0, 36) + " stop");
 	  				System.err.println(getCorrectedLine(line," stop"));
+	  				lastTurb=0;
+	  				lastStop=lineTime;
   				}
+  			}
+  			else if (delta>=0 && lastTurb!=0 && (lineTime-lastStop)>aDayInMsec) // transition from off to on
+  			{
+  				fOn=true;
+  				hm.put(getTsTextFromLine(line),line.substring(0, 36) + " start");
+  				System.err.println(getCorrectedLine(line," start"));
+  				lastStart=lineTime;
   			}
   			avg=newAvg;
   		}
+			else if (line.contains("turbidity"))
+			{
+				lastTurb=Long.parseLong(getTsTextFromLine(line));
+			}
   	}
   	bsr.reset();
   }
