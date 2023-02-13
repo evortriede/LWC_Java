@@ -84,3 +84,16 @@ Here are some of the data issues that can cause errors in the report:
 9. Save the worksheet. It is now ready to be printed, signed and mailed.
 
 As noted before, the details in the workbook should be scrutenized for sanity before mailing. For example, if the maximum turbidity for a given day is much higher than any of the four hour values or if there are any values recorded for days when the WTP was not running. These anomolies should be located in the raw data, corrected and the whole process repeated. Alternativly, the Excel workbook can be manually corrected if the proper values are known.
+
+## Theory of Operation
+
+The microcontroller that the Current Monitor Service connects to (the Current Recorder) sends metrics that it receives from a microcontroller at the WTP (the Current Monitor). These metrics are recorded by the Current Monitor Service to two files: one containing the raw data and another containing interpreted metrics. These files are rotated each month and live in the services directory of the clone of this repository on the computer running the service. The raw data file is named `m-yyyy-raw.txt` and the processed data file is named `m-yyyy-cooked.txt` where `m` is the one or two digit month and `yyyy` is the four digit year for the date corresponding to the data.
+
+The `report.bat` script runs a Java program (`com.lwc.VolTurbProcessor`) that reads `m-yyyy-cooked.txt` and produces `m-yyyy-fixed.txt` and then runs another program (`com.lwc.LWCMonthlyReport`) which reads the fixed file and writes the two .csv files, MMsheet1.csv and MMsheet2.csv which are used to create the Excel workbook that OHA needs.
+
+VolTurbProcessor makes two passes through the "cooked" file. The first pass is to locate the start and end of WTP runs within the data. The second pass looks for missing and spurious data and writes the "fixed" file. The missing data is manufactured and the spurious data is removed. Also, markers are placed at the start and end of WTP runs as identified in the first pass.
+
+LWCMonthlyReport reads the "fixed" file and computes the data for the cells in the Excell workbook, writing them the the .csv files. Four hour turbidity numbers are averages over each four hour period and the maximum number is the highest single sample in a day. The numbers for amount of water produced are computed from tank level readings while hourly usage is computed from pressure pump invocations.
+
+That's the high level view. For more detail, look at the code.
+
