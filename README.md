@@ -67,7 +67,7 @@ Here are some of the data issues that can cause errors in the report:
 
 5. The report.bat script will have created two .csv files in the reports directory named MMsheet1.csv and MMsheet2.csv where MM is the two digit month number corresponding to the month for reporting is being done. For example 01sheet1.csv and 01sheet2.csv. Open MMSheet1.csv with Excel, then select and copy cells A1 to K31.
 
-![Copy Sheet 1](/assets/CopySheet1.png)
+![Copy Sheet 1](/assets/Copy_Sheet1.png)
 
 6. Switch to the report workbook and right click cell C5. Select the `fx` Paste Option.
 
