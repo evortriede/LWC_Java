@@ -139,10 +139,12 @@ public class LWCMonthlyReport
 			int iTurbidity=Integer.parseInt(line.substring(52).trim());
 			float fTurbidity = iTurbidity;
 			fTurbidity /= 1000.0;
+			/*
 			if (lastTurbidity != 0 && fTurbidity-lastTurbidity>0.1)
 			{
 				return; // spurious
 			}
+			*/
 			lastTurbidityTime = time;
 			if (hour != turbHour)
 			{
