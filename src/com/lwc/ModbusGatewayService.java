@@ -24,9 +24,12 @@ public class ModbusGatewayService extends AbstractService
 		@Override
 		public void run()
 		{
+			System.out.println("Runner started");
 			try
 			{
+				System.out.println("connecting to plc "+plcHost);
 				Socket s = new Socket(plcHost, 502);
+				System.out.println("connected");
 				plcIns=s.getInputStream();
 				plcOuts=s.getOutputStream();
 				clientIns=sock.getInputStream();
@@ -35,11 +38,39 @@ public class ModbusGatewayService extends AbstractService
 				{
 					if (clientIns.available()>0)
 					{
-						plcOuts.write(clientIns.readAllBytes());
+						
+						System.out.println("got some client bytes "+clientIns.available());
+						
+						/*
+						while(clientIns.available()!=0)
+						{
+							plcOuts.write(clientIns.read());
+						}
+						*/
+						byte[] rgIn=new byte[clientIns.available()];
+						for (int i=0;i<rgIn.length;i++)
+						{
+							rgIn[i]=(byte)clientIns.read();
+						}
+						plcOuts.write(rgIn);
+						plcOuts.flush();
 					}
 					if (plcIns.available()>0)
 					{
-						clientOuts.write(plcIns.readAllBytes());
+						System.out.println("got some plc bytes "+plcIns.available());
+						/*
+						while(plcIns.available()!=0)
+						{
+							clientOuts.write(plcIns.read());
+						}
+						*/
+						byte[] rgOut=new byte[plcIns.available()];
+						for (int i=0;i<rgOut.length;i++)
+						{
+							rgOut[i]=(byte)plcIns.read();
+						}
+						clientOuts.write(rgOut);
+						clientOuts.flush();
 					}
 					try
 					{
@@ -82,8 +113,10 @@ public class ModbusGatewayService extends AbstractService
 				{
 					try
 					{
+						System.out.println("Creating runner");
 						Runner r = new Runner();
 						r.sock = ss.accept();
+						System.out.println("Got a connection");
 						r.start();
 					}
 					catch (Exception e)
