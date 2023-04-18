@@ -1,0 +1,1 @@
+.\ModbusGatewayService.exe --WinRun4J:UnregisterService

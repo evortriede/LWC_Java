@@ -5,3 +5,4 @@ reports/*2.xlsx
 reports/*3.xlsx
 .project
 .classpath
+bin/*.ini
