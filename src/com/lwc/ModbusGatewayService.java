@@ -39,14 +39,6 @@ public class ModbusGatewayService extends AbstractService
 					if (clientIns.available()>0)
 					{
 						
-						System.out.println("got some client bytes "+clientIns.available());
-						
-						/*
-						while(clientIns.available()!=0)
-						{
-							plcOuts.write(clientIns.read());
-						}
-						*/
 						byte[] rgIn=new byte[clientIns.available()];
 						for (int i=0;i<rgIn.length;i++)
 						{
@@ -57,13 +49,6 @@ public class ModbusGatewayService extends AbstractService
 					}
 					if (plcIns.available()>0)
 					{
-						System.out.println("got some plc bytes "+plcIns.available());
-						/*
-						while(plcIns.available()!=0)
-						{
-							clientOuts.write(plcIns.read());
-						}
-						*/
 						byte[] rgOut=new byte[plcIns.available()];
 						for (int i=0;i<rgOut.length;i++)
 						{
@@ -100,7 +85,6 @@ public class ModbusGatewayService extends AbstractService
 			ss = new ServerSocket(502);
 		} catch (IOException e1)
 		{
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 			throw new ServiceException(e1);
 		}
