@@ -1,0 +1,1 @@
+.\ModbusDataRecorderService.exe --WinRun4J:RegisterService
