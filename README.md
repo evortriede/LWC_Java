@@ -149,7 +149,7 @@ Here are the steps:
 5. CD to the `bin` directory of the cloned repository
 6. Run the `build.bat` script (compiles the Java programs and creates `lwc.jar`)
 7. Run the `configure_modbus_recorder_svc.bat` script (creates `ModbusDataRecorder.ini`)
-8. Run the `ergister_modbus_recorder_svc.bat` script (registers the program as a Windows service)
+8. Run the `register_modbus_recorder_svc.bat` script (registers the program as a Windows service)
 9. Check `Windows Services` to make sure that the services are running and set to automatically start.
 
 ### Running independently from another computer
@@ -160,5 +160,5 @@ The Modbus Data Recorder can be run as a stand alone program, if desired, with t
 
 Where:
 
-- `directory.for.recorded.data` is the directory to get the files that the data is recorded to. The files will be named `m-yyyy-cooked.txt` where m is the one or two digit month and yyyy is the year.
+- `directory.for.recorded.data` is the directory to get the files that the data is recorded to. The last character of the parameter must be a forward slash `/`. The files will be named `m-yyyy-cooked.txt` where m is the one or two digit month and yyyy is the year.
 - ip.address.of.wtp.pc is the ip address of the PC in the WTP. It could also be the IP address of the PLC provided the computer on which it is being run has an ethernet connection to the PLC (as does the WTP PC).
