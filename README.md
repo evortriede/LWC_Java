@@ -26,7 +26,13 @@ A radio link has been installed between the remote location and the WTP, extendi
 
 Eventually, we will take advantage of the new connectivity. For now, it is nice to be able to use WiFi calling, etc. from the WTP.
 
-## Installation
+### Update 2 - Recording metrics at the WTP (or elsewhere)
+
+Using LoRa, we often miss data when recording metrics. We are now suplementing the LoRa metrics by collecting metrics directly from the PLC at the WTP. This is done by the `com.lwc.ModbusDataRecorderService` program which is run as a service on the WTP PC. Also, since we now have a network connection to the WTP, this service can be run on any PC on the same network.
+
+## Programs for the remote computer
+
+### Installation
 
 Hopefully, these instructions will never have to be used as there is already a remote computer with all of this software installed, configured and running. If, however, something should happen to the remote computer and it has to be re-built and the backups have somehow disappeared or become corrupt, these instructions can be used to get things going again.
 
@@ -43,7 +49,8 @@ Here are the steps:
 9. Run the `registersvc.bat` script (Installs the program as a Windows service)
 10. Check `Windows Services` to make sure that the service is running and set to automatically start.
 
-## Theory of Operation
+
+### Theory of Operation
 
 The microcontroller that the Current Monitor Service connects to (the Current Recorder) sends metrics that it receives from a microcontroller at the WTP (the Current Monitor). These metrics are recorded by the Current Monitor Service to two files: one containing the raw data and another containing interpreted metrics. These files are rotated each month and live in the services directory of the clone of this repository on the computer running the service. The raw data file is named `m-yyyy-raw.txt` and the processed data file is named `m-yyyy-cooked.txt` where `m` is the one- or two-digit month and `yyyy` is the four-digit year for the date corresponding to the data.
 
@@ -51,11 +58,11 @@ The `report.bat` script runs a Java program (`com.lwc.VolTurbProcessor`) that re
 
 VolTurbProcessor makes two passes through the "cooked" file. The first pass is to locate the start and end of WTP runs within the data. The second pass looks for missing and spurious data and writes the "fixed" file. The missing data is manufactured and the spurious data is removed. Also, markers are placed at the start and end of WTP runs as identified in the first pass.
 
-LWCMonthlyReport reads the "fixed" file and computes the data for the cells in the Excel workbook, writing them the .csv files. Four-hour turbidity numbers are averages over each four hour period and the maximum number is the highest single sample in a day. The numbers for amount of water produced are computed from tank level readings while hourly usage is computed from pressure pump invocations.
+LWCMonthlyReport reads the "fixed" file and computes the data for the cells in the Excel workbook, writing them to the .csv files. Four-hour turbidity numbers are averages over each four hour period and the maximum number is the highest single sample in a day. The numbers for amount of water produced are computed from tank level readings while hourly usage is computed from pressure pump invocations.
 
 That's the high-level view. For more detail, look at the code.
 
-## Creating OHA Reports
+### Creating OHA Reports
 
 Creating of the OHA Turbidity report is a semi-automatic process. The report is an Excel spread sheet with two pages (a third page is instructions). There are a number of conditions that can affect the raw data that is collected by the CurrentRecorder program that can cause errors in the report generation, so it is important that the finished product be scrutinized for sanity and corrected if required. When there are errors, it is best to correct the source data if possible and re-generate the report.
 
@@ -65,7 +72,7 @@ Here are some of the data issues that can cause errors in the report:
 - Spurious values. Turbidity and tank volume data are read from the PLC at the WTP. The VolTurbProcessor program determines that the WTP is running by looking at the tank volume over time. When the tank volume increases by 50 gallons or more over the course of a minute, it assumes that the plant is running. Now, from time to time the PLC will report a value for tank volume that is significantly different from reality. In these instances, the VolTurbProcessor can be fooled that the plant has started running or that it has stopped when it is still running. Similar data glitches can happen with turbidity metrics. This is usually evident when the four-hour turbidity numbers in the report look reasonable but the "Highest for the Day" number is very high. 
 - Plant maintenance and/or interrupted runs. All sorts of interesting data can be generated during WTP maintenance.
 
-### Instructions
+#### Instructions
 
 1. Run the `reports.bat` script in the `bin` directory of this repository. With no parameters, it will create the artifacts required for the previous month. To run the script for a specific month, enter the two-digit month and four-digit year. For example, `.\report.bat 01 2023`.
 
@@ -124,3 +131,34 @@ Here are the steps:
 7. Run the `configure_gateway_svc.bat` script (creates `ModbusGatewayService.ini` - look it over as a sanity check)
 8. Run the `register_gateway_svc.bat` script (Installs the program as a Windows service)
 9. Check `Windows Services` to make sure that the service is running and set to automatically start.
+
+## Modbus Data Recorder Service
+
+The Modbus Data Recorder Service runs on the WTP PC (or elsewhere), talking to the PLC and recording metrics for tank level and turbidity. It is a Java program that runs as a Windows Service by virtue of the WinRun4J package.
+
+### Installation
+
+Hopefully, these instructions will never have to be used as the PC at the WTP already has this software installed, configured and running. If, however, something should happen to the WTP PC and it has to be re-built and the backups have somehow disappeared or become corrupt, these instructions can be used to get things going again. They can also be used on other computers on the network if desired.
+
+Here are the steps:
+
+1. Install the latest Java JDK
+2. Install GitHub Desktop
+3. Clone this repository to the new computer
+4. Open a CMD or Power Shell window in administrator mode
+5. CD to the `bin` directory of the cloned repository
+6. Run the `build.bat` script (compiles the Java programs and creates `lwc.jar`)
+7. Run the `configure_modbus_recorder_svc.bat` script (creates `ModbusDataRecorder.ini`)
+8. Run the `ergister_modbus_recorder_svc.bat` script (registers the program as a Windows service)
+9. Check `Windows Services` to make sure that the services are running and set to automatically start.
+
+### Running independently from another computer
+
+The Modbus Data Recorder can be run as a stand alone program, if desired, with the following command line from the `bin` directory of the repository:
+
+`java -cp lwc.jar com.lwc.ModbusDataRecorder directory.for.redorded.data/ ip.address.of.wtp.pc`
+
+Where:
+
+- `directory.for.recorded.data` is the directory to get the files that the data is recorded to. The files will be named `m-yyyy-cooked.txt` where m is the one or two digit month and yyyy is the year.
+- ip.address.of.wtp.pc is the ip address of the PC in the WTP. It could also be the IP address of the PLC provided the computer on which it is being run has an ethernet connection to the PLC (as does the WTP PC).
