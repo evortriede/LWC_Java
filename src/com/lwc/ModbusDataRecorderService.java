@@ -56,13 +56,15 @@ public class ModbusDataRecorderService extends AbstractService
 		{
 			t.interrupt();
 			recorder.socket.close();
-		} catch (IOException e)
+		} 
+		catch (IOException e)
 		{
 		}
 		try
 		{
 			t.join();
-		} catch (InterruptedException e)
+		} 
+		catch (InterruptedException e)
 		{
 		}
 		return 0;

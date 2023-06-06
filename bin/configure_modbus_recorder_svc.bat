@@ -30,6 +30,7 @@ echo vmarg.3=-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n >> bi
 
 echo arg.1=%cd%\service/ >> bin\ModbusDataRecorderService.txt
 echo arg.2=192.168.0.1 >> bin\ModbusDataRecorderService.txt
+echo arg.3=LWCWTPMonitor.local >> bin\ModbusDataRecorderService.txt
 
 rem The following line appends "vm.location" without a line ending character to the file
 echo|set /p="vm.location=">>bin\ModbusDataRecorderService.txt
