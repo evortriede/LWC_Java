@@ -101,6 +101,7 @@ public class ModbusGatewayService extends AbstractService
 						Runner r = new Runner();
 						r.sock = ss.accept();
 						System.out.println("Got a connection");
+						r.setDaemon(true);
 						r.start();
 					}
 					catch (Exception e)
@@ -110,6 +111,7 @@ public class ModbusGatewayService extends AbstractService
 				}
 			}
 		};
+		t.setDaemon(true);
 		t.start();
 		while (!shutdown)
 		{
@@ -130,7 +132,7 @@ public class ModbusGatewayService extends AbstractService
 		}
 		try
 		{
-			t.join();
+			t.join(1000);
 		} catch (InterruptedException e)
 		{
 		}

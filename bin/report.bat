@@ -31,6 +31,7 @@ set egv_mm2=!egv_mm2:~-2!
 set egv_yy=%date:~-4%
 :c2
 echo file = !egv_mm!-!egv_yy!-cooked.txt
+pscp -pwfile "!egv_!pw.txt" lwc@lwc-MINI-S:/home/lwc/ModbusDataRecorder/!egv_mm!-!egv_yy!-cooked.txt .
 java -cp ..\bin\lwc.jar com.lwc.VolTurbProcessor !egv_mm!-!egv_yy!-cooked.txt > !egv_mm!-!egv_yy!-fixed.txt
 :c3
 java -cp ..\bin\lwc.jar com.lwc.LWCMonthlyReport !egv_mm!-!egv_yy!-fixed.txt !egv_mm2! ..\reports/

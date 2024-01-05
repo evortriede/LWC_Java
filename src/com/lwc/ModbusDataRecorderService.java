@@ -41,6 +41,7 @@ public class ModbusDataRecorderService extends AbstractService
 				}
 			}
 		};
+		t.setDaemon(true);
 		t.start();
 		while (!shutdown)
 		{
@@ -62,7 +63,8 @@ public class ModbusDataRecorderService extends AbstractService
 		}
 		try
 		{
-			t.join();
+			t.join(10000);
+			// oh well, we tried :)
 		} 
 		catch (InterruptedException e)
 		{

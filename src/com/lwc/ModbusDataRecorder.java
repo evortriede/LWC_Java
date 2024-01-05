@@ -1,9 +1,6 @@
 package com.lwc;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -115,65 +112,6 @@ public class ModbusDataRecorder
 			cookedStream=System.out;
 		}
 	}
-
-	public class ModbusRequest
-	{
-		short transId;
-		short protocolId=0;
-		short length=6;
-		byte unitId=0;
-		byte functionCode=3;
-		short regNo;
-		short respLen=1;
-		ModbusRequest(short tid, short reg)
-		{
-			transId=tid;
-			regNo=reg;
-		}
-		ModbusRequest()
-		{}
-
-		public void writeExternal(OutputStream os) throws IOException
-		{
-			ByteArrayOutputStream baos=new ByteArrayOutputStream();
-			DataOutputStream s=new DataOutputStream(baos);
-			s.writeShort(transId);
-			s.writeShort(protocolId);
-			s.writeShort(length);
-			s.writeByte(unitId);
-			s.writeByte(functionCode);
-			s.writeShort(regNo);
-			s.writeShort(respLen);
-			os.write(baos.toByteArray());
-		}
-	}
-	public class ModbusResponse
-	{
-		short transId;
-		short protocolId;
-		short length;
-		byte unitId;
-		byte functionCode;
-		byte respLen;
-		short value;
-		ModbusResponse()
-		{
-			
-		}
-		public void readExternal(InputStream ins) throws IOException
-		{
-			byte[] rgb=ins.readNBytes(11);
-			ByteArrayInputStream bais=new ByteArrayInputStream(rgb);
-			DataInputStream in=new DataInputStream(bais);
-			transId=in.readShort();
-			protocolId=in.readShort();
-			length=in.readShort();
-			unitId=in.readByte();
-			functionCode=in.readByte();
-			respLen=in.readByte();
-			value=in.readShort();
-		}
-	}
 	
 	public ModbusDataRecorder(String[] args)
 	{
@@ -203,6 +141,16 @@ public class ModbusDataRecorder
 			{
 				for (;;)
 				{
+					if (monSocket != null)
+					{
+						try
+						{
+							monSocket.close();
+						} catch (IOException e)
+						{
+							e.printStackTrace();
+						}
+					}
 					try
 					{
 						System.out.println("connecting to "+monitorHost+":"+monitorPort);
@@ -234,7 +182,7 @@ public class ModbusDataRecorder
 				{
 				case 'r':
 					short rawTank=swapEndian(dis.readShort());
-					instance.report(String.valueOf((rawTank * 719) / 100)+" gallons", 0);
+					instance.report(String.valueOf((rawTank * 698) / 100)+" gallons", 0);
 					instance.report("raw tank level "+rawTank, 0);
 					//System.out.println("raw tank level "+rawTank);
 					break;
@@ -293,31 +241,51 @@ public class ModbusDataRecorder
 	
 	public void process()
 	{
+		MonitorThread mt=new MonitorThread();
 		try
 		{
-			new MonitorThread().start();
+			if (!"-".equals(monitorHost))
+			{
+				mt.setDaemon(true);
+				mt.start();
+			}
 			socket=new Socket(host,port);
 			is=socket.getInputStream();
 			os=socket.getOutputStream();
 			
 			socket.setTcpNoDelay(false);
+			socket.setSoTimeout(5000);
 
 			
 			for(short tid=0;;tid++)
 			{
-				ModbusRequest req=new ModbusRequest(tid, (short)139);
+				ModbusRequest req=new ModbusRequest(tid++, (short)139);
 				req.writeExternal(os);
 				ModbusResponse resp=new ModbusResponse();
 				resp.readExternal(is);
-				report("raw tank level "+resp.value,0);
+				report("-raw tank level "+resp.value[0],0);
+				report(String.valueOf((resp.value[0] * 698) / 100)+" Gallons", 0);
 				Thread.sleep(10000l);
 				req.regNo=0x64;
+				req.transId=tid++;
 				req.writeExternal(os);
 				resp.readExternal(is);
-				if (resp.value!=0)
+				if (resp.value[0]!=0)
 				{
-					report("raw turbidity "+resp.value,0);
+					report("-raw turbidity "+resp.value[0],0);
 				}
+				req.regNo=1000;
+				req.transId=tid;
+				req.respLen=6;
+				req.writeExternal(os);
+				resp.readExternal(is);
+				int onDuration = resp.value[0];
+				onDuration = (onDuration * 65536) + resp.value[1];
+				int offDuration = resp.value[2];
+				offDuration = (offDuration * 65536) + resp.value[3];
+				report("Duty cycle "+onDuration+"/"+offDuration,0);
+				report("+chlorine "+resp.value[4],0);
+				report("+pump "+resp.value[5],0);
 				Thread.sleep(50000);
 			}
 		} 
@@ -333,6 +301,8 @@ public class ModbusDataRecorder
 		{
 			try
 			{
+				mt.interrupt();
+				mt.monSocket.close();
 				socket.close();
 			}
 			catch (Exception ex)

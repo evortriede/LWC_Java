@@ -51,14 +51,21 @@ public class VolTurbProcessor
   	{
   		String line=bsr.readLine();
   		if (line.length() < 6) continue;
-  		if (month != Integer.parseInt(line.substring(4,6)))
+  		try
   		{
-  			month = Integer.parseInt(line.substring(4,6));
-  			if (fOn)
-  			{
-  				hm.put(getTsTextFromLine(line),line.substring(0, 36) + " start");
-  				System.err.println(getCorrectedLine(line," start"));
-  			}
+	  		if (month != Integer.parseInt(line.substring(4,6)))
+	  		{
+	  			month = Integer.parseInt(line.substring(4,6));
+	  			if (fOn)
+	  			{
+	  				hm.put(getTsTextFromLine(line),line.substring(0, 36) + " start");
+	  				System.err.println(getCorrectedLine(line," start"));
+	  			}
+	  		}
+  		}
+  		catch (NumberFormatException e)
+  		{
+  			continue;
   		}
   		if (line.contains("gall"))
   		{

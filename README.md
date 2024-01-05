@@ -30,6 +30,14 @@ Eventually, we will take advantage of the new connectivity. For now, it is nice 
 
 Using LoRa, we often miss data when recording metrics. We are now suplementing the LoRa metrics by collecting metrics directly from the PLC at the WTP. This is done by the `com.lwc.ModbusDataRecorderService` program which is run as a service on the WTP PC. Also, since we now have a network connection to the WTP, this service can be run on any PC on the same network.
 
+### Update 2.1 - More metrics
+
+The `Current Monitor` (which lives in the WTP, monitoring the duty cycle of the pressure pump and transmitting metrics over LoRa) has been modified to write pressure pump and chlorine metrics to the PLC and the `com.lwc.ModbusDataRecorderService` program has been modified to read them along with the turbidity and tank level metrics that it was already reading. This makes these metrics available to any device on the network, which will aid in redundancy. 
+
+Also, we lost the PC and Raspberry Pi that were recording the data in the remote location. They have been replaced by a dedicated Linux computer and the PC has been re-immaged with Linux as well. It will be relocated to the WTP where it will run the `com.lwc.ModbusDataRecorderService` program as a backup to the Linux computer in the remote location.
+
+Since we lost the PC that used to run the `com.lwc.CurrentRecorderService` program and the `com.lwc.ModbusDataRecorder` program is fulfilling the function of the `com.lwc.CurrentRecorderService` program, we no longer need to run it; however, we still need to run the programs to create the reports once a month. Currently, they are being run on a private PC, but they can be run on the PC at the WTP.
+
 ## Programs for the remote computer
 
 ### Installation
@@ -45,14 +53,11 @@ Here are the steps:
 5. Open a CMD or Power Shell window in administrator mode
 6. CD to the `bin` directory of the cloned repository
 7. Run the `build.bat` script (compiles the Java programs and creates `lwc.jar`)
-8. Run the `configure.bat` script (creates `CurrentRecorderService.ini` - look it over as a sanity check)
-9. Run the `registersvc.bat` script (Installs the program as a Windows service)
-10. Check `Windows Services` to make sure that the service is running and set to automatically start.
 
 
 ### Theory of Operation
 
-The microcontroller that the Current Monitor Service connects to (the Current Recorder) sends metrics that it receives from a microcontroller at the WTP (the Current Monitor). These metrics are recorded by the Current Monitor Service to two files: one containing the raw data and another containing interpreted metrics. These files are rotated each month and live in the services directory of the clone of this repository on the computer running the service. The raw data file is named `m-yyyy-raw.txt` and the processed data file is named `m-yyyy-cooked.txt` where `m` is the one- or two-digit month and `yyyy` is the four-digit year for the date corresponding to the data.
+The `com.lwc.ModbusDataRecorder` program reads data from the PLC at the WTP and writes it to a file named `m-yyyy-cooked.txt` where `m` is the one- or two-digit month and `yyyy` is the four-digit year for the date corresponding to the data.
 
 The `report.bat` script runs a Java program (`com.lwc.VolTurbProcessor`) that reads `m-yyyy-cooked.txt` and produces `m-yyyy-fixed.txt` and then runs another program (`com.lwc.LWCMonthlyReport`) which reads the "fixed" file and writes the two .csv files, `MMsheet1.csv` and `MMsheet2.csv` which are used to create the Excel workbook that OHA needs.
 

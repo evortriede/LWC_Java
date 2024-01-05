@@ -134,7 +134,7 @@ public class LWCMonthlyReport
     	lampState="Y";
     	offSpec="0";
 		}
-		else if (plantIsRunning && line.indexOf("turbidity") > 0)
+		else if (plantIsRunning && line.indexOf(" raw turbidity") > 0)
 		{
 			int iTurbidity=Integer.parseInt(line.substring(52).trim());
 			float fTurbidity = iTurbidity;
@@ -294,7 +294,7 @@ public class LWCMonthlyReport
 			if (line.indexOf("gall") < 0) continue;
 			if (4 == line.indexOf(monthText))
 			{
-				lastLevel = Integer.parseInt(line.substring(38, line.indexOf("gallons")).trim());
+				lastLevel = Integer.parseInt(line.substring(39, line.indexOf("gallons")).trim());
 				return line;
 			}
 		}
