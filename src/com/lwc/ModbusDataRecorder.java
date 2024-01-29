@@ -279,13 +279,13 @@ public class ModbusDataRecorder
 				req.respLen=6;
 				req.writeExternal(os);
 				resp.readExternal(is);
-				int onDuration = resp.value[0];
-				onDuration = (onDuration * 65536) + resp.value[1];
-				int offDuration = resp.value[2];
-				offDuration = (offDuration * 65536) + resp.value[3];
+				int onDuration = swapEndian(resp.value[1]);
+				onDuration = (onDuration * 65536) + swapEndian(resp.value[0]);
+				int offDuration = swapEndian(resp.value[3]);
+				offDuration = (offDuration * 65536) + swapEndian(resp.value[2]);
 				report("Duty cycle "+onDuration+"/"+offDuration,0);
-				report("+chlorine "+resp.value[4],0);
-				report("+pump "+resp.value[5],0);
+				report("+chlorine "+swapEndian(resp.value[4]),0);
+				report("+pump "+swapEndian(resp.value[5]),0);
 				Thread.sleep(50000);
 			}
 		} 
@@ -324,7 +324,10 @@ public class ModbusDataRecorder
 	
 	public static void main(String[] args)
 	{
-		new ModbusDataRecorder(args).process();
+		for (;;)
+		{
+			new ModbusDataRecorder(args).process();
+		}
 	}
 
 }
