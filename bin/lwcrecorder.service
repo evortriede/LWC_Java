@@ -1,0 +1,12 @@
+[Unit]
+Description=Metric recorder for London Water Co-op
+After=network.target
+
+[Service]
+ExecStart=/home/lwc/LWC_Java/bin/recorder.sh
+Restart=always
+RestartSec=1min
+
+[Install]
+WantedBy=multi-user.target
+
