@@ -1,4 +1,4 @@
-@echo off
+echo off
 rem Check id command extensions are enabled and if not, start a new shell with them enabled
 if %tmp%==!tmp! goto doit
 call cmd /V:ON /C %0 %*
@@ -10,8 +10,9 @@ pushd %egv_:~0,-4%service\
 rem if parameters have been given they are month and year and optionally a flag to indicate that 
 rem only the fixed data is to be processed
 if "%1"=="" goto c0
-set egv_mm2=%1
-set /A egv_mm=%1
+set egv_mm=%1
+set egv_mm2=0!egv_mm!
+set egv_mm2=!egv_mm2:~-2!
 set egv_yy=%2
 if "%3"=="" goto c2
 goto c3

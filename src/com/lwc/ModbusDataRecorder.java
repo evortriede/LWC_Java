@@ -11,6 +11,8 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class ModbusDataRecorder
 {
@@ -238,9 +240,97 @@ public class ModbusDataRecorder
 		}
 		
 	}
+  
+  public static String formatStatus(int gallons, int gph, int gpd, float duty, float turb, float chlor, int pump)
+  {
+    String s = String.format("%d,%d,%d,%.2f,%.3f,%.2f,%d"
+              ,gallons
+              ,gph
+              ,gpd
+              ,duty
+              ,turb
+              ,chlor
+              ,pump
+              );
+    return s;
+  }
+  
+  public static void sendToCloud(String stat)
+  {
+    Thread t = new Thread()
+    {
+      public void run()
+      {
+        try
+        {
+          String urlString = "https://londonwatercoop.org/storeit.php?"+stat;
+          URL url = new URL(urlString);
+          HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+          connection.setRequestMethod("GET");
+          //connection.connect();
+          int responseCode = connection.getResponseCode();
+          System.out.println("GET request sent to URL : " + urlString);
+          System.out.println("Response Code : " + responseCode);
+          connection.disconnect();
+        }
+        catch (Exception e)
+        {
+          e.printStackTrace();
+        }
+      }
+    };
+    t.setDaemon(true);
+    t.start();
+  }
 	
+  int gallons=0;
+  int rgGph[]=new int[60];
+  int rgGpd[]=new int[1440];
+  int gph,gpd;
+  int iGph=0;
+  int iGpd=0;
+  
+  class GalPerXThread extends Thread
+  {
+    public void run()
+    {
+      for (;;)
+      {
+        try
+        {
+          Thread.sleep(60000);
+        }
+        catch (Exception e)
+        {}
+
+        if (gallons==0) 
+        {
+          continue;
+        }
+        
+        rgGph[iGph%60] = gallons;
+        iGph++;
+        gph = rgGph[(iGph<60)?0:iGph%60]-gallons;
+        System.out.println("iGph="+iGph+" - "+rgGph[(iGph<60)?0:iGph%60]+" - "+gallons);
+        
+        rgGpd[iGpd%1440] = gallons;
+        iGpd++;
+        gpd = rgGpd[(iGpd<1440)?0:iGpd%1440]-gallons;
+      }
+    }
+  }
+
+  GalPerXThread gpxt=null;
+  
 	public void process()
 	{
+    if (gpxt==null)
+    {
+      gpxt = new GalPerXThread();
+      gpxt.setDaemon(true);
+      gpxt.start();
+    }
+    
 		MonitorThread mt=new MonitorThread();
 		try
 		{
@@ -264,6 +354,7 @@ public class ModbusDataRecorder
 				ModbusResponse resp=new ModbusResponse();
 				resp.readExternal(is);
 				report("-raw tank level "+resp.value[0],0);
+        gallons=(resp.value[0] * 698) / 100;
 				report(String.valueOf((resp.value[0] * 698) / 100)+" Gallons", 0);
 				Thread.sleep(10000l);
 				req.regNo=0x64;
@@ -274,6 +365,7 @@ public class ModbusDataRecorder
 				{
 					report("-raw turbidity "+resp.value[0],0);
 				}
+        float turbidity=resp.value[0]/100.0f;
 				req.regNo=1000;
 				req.transId=tid;
 				req.respLen=6;
@@ -283,9 +375,14 @@ public class ModbusDataRecorder
 				onDuration = (onDuration * 65536) + swapEndian(resp.value[0]);
 				int offDuration = swapEndian(resp.value[3]);
 				offDuration = (offDuration * 65536) + swapEndian(resp.value[2]);
+        float dutyCycle=onDuration * 100f;
+        dutyCycle /= offDuration;
 				report("Duty cycle "+onDuration+"/"+offDuration,0);
 				report("+chlorine "+swapEndian(resp.value[4]),0);
+        float chlorine=swapEndian(resp.value[4])/713.0f;
 				report("+pump "+swapEndian(resp.value[5]),0);
+        int pump=swapEndian(resp.value[5]);
+        sendToCloud(formatStatus(gallons,gph,gpd,dutyCycle,turbidity,chlorine,pump));
 				Thread.sleep(50000);
 			}
 		} 
