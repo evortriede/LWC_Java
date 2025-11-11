@@ -1,0 +1,1 @@
+pscp -pwfile pw.txt lwc.jar lwc@lwc-mini-s:/home/lwc/

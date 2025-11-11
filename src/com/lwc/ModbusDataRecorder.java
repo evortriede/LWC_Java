@@ -365,7 +365,7 @@ public class ModbusDataRecorder
 				{
 					report("-raw turbidity "+resp.value[0],0);
 				}
-        float turbidity=resp.value[0]/100.0f;
+        float turbidity=resp.value[0]/1000.0f;
 				req.regNo=1000;
 				req.transId=tid;
 				req.respLen=6;
