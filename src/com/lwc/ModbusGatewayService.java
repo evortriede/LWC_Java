@@ -12,6 +12,7 @@ import org.boris.winrun4j.ServiceException;
 public class ModbusGatewayService extends AbstractService
 {
 	String plcHost="192.168.0.1";
+  int plcPort=502;
 	
 	class Runner extends Thread
 	{
@@ -28,7 +29,7 @@ public class ModbusGatewayService extends AbstractService
 			try
 			{
 				System.out.println("connecting to plc "+plcHost);
-				Socket s = new Socket(plcHost, 502);
+				Socket s = new Socket(plcHost, plcPort);
 				System.out.println("connected");
 				plcIns=s.getInputStream();
 				plcOuts=s.getOutputStream();
@@ -79,10 +80,33 @@ public class ModbusGatewayService extends AbstractService
 	@Override
 	public int serviceMain(String[] arg0) throws ServiceException
 	{
+    int listenPort=502;
+    
+    if (arg0.length >= 1)
+    {
+      plcHost=arg0[0];
+    }
+    try
+    {
+      if (arg0.length >= 2)
+      {
+        plcPort=Integer.parseInt(arg0[1]);
+      }
+      if (arg0.length >= 3)
+      {
+        listenPort=Integer.parseInt(arg0[2]);
+      }
+    }
+    catch (NumberFormatException e2)
+    {
+      e2.printStackTrace();
+      throw new ServiceException(e2);
+    }
+    
 		ServerSocket ss;
 		try
 		{
-			ss = new ServerSocket(502);
+			ss = new ServerSocket(listenPort);
 		} catch (IOException e1)
 		{
 			e1.printStackTrace();

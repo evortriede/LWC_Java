@@ -10,7 +10,7 @@ goto doit
 pushd ..
 :doit
 pushd src\com\lwc
-javac -cp ../../../resources/winrun4j.jar *.java
+javac --release 14 -cp ../../../resources/winrun4j.jar *.java
 popd
 jar -c -f bin\lwc.jar -C src .
 popd
